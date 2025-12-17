@@ -1,0 +1,550 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, viewport-fit=cover">
+    <link rel="canonical" href="https://educmark.cl/dashboard.html">
+    <title>EducMark | Dashboard Docente</title>
+    <meta name="description"
+        content="Panel de control para profesores. Genera planificaciones, PPTs y evaluaciones con IA alineada al MINEDUC.">
+    <meta name="theme-color" content="#a48fff">
+
+    <!-- PWA Manifest -->
+    <link rel="manifest" href="manifest.json">
+
+    <!-- Favicon -->
+    <link rel="icon" type="image/svg+xml"
+        href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect width='100' height='100' rx='20' fill='%23a48fff'/><path d='M30 50 L50 30 L70 50 L50 70 Z' fill='white'/></svg>">
+
+    <!-- Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&family=Space+Grotesk:wght@300;400;500;600;700&display=swap"
+        rel="stylesheet">
+
+    <!-- Libraries -->
+    <script src="https://unpkg.com/@phosphor-icons/web"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+    <!-- Custom Styles -->
+    <link rel="stylesheet" href="dashboard.css">
+</head>
+
+<body>
+
+    <div class="background-mesh">
+        <div class="mesh-orb orb-1"></div>
+        <div class="mesh-orb orb-2"></div>
+    </div>
+    <div id="toast-container"></div>
+    <div class="sidebar-overlay" onclick="UI.toggleSidebar()"></div>
+
+    <!-- Modal Upsell -->
+    <div id="upsellModal" class="modal">
+        <div class="modal-content" style="max-width: 600px;">
+            <div style="text-align: center; padding: 2rem;">
+                <div style="font-size: 4rem; margin-bottom: 1rem;">⚠️</div>
+                <h2 style="color: var(--warning); margin-bottom: 1rem;">¡Estás por quedarte sin créditos!</h2>
+                <p style="color: var(--muted); margin-bottom: 2rem;">
+                    Solo te quedan <strong id="modalCreditsLeft" style="color: var(--warning);">3</strong> créditos.
+                    <br>Mejora tu plan y sigue generando clases sin interrupciones.
+                </p>
+                <div style="display: flex; gap: 1rem; justify-content: center;">
+                    <button onclick="window.location.href='https://educmark.cl#planes'" class="btn btn-primary"
+                        style="padding: 1rem 2rem;">
+                        Ver Planes
+                    </button>
+                    <button onclick="UI.closeUpsellModal()" class="btn btn-outline">
+                        Después
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal Logros -->
+    <div id="achievementModal" class="modal">
+        <div class="modal-content" style="max-width: 400px; text-align: center; padding: 2rem;">
+            <div style="font-size: 5rem; margin-bottom: 1rem;" id="achievementIcon">🏆</div>
+            <h2 style="margin-bottom: 0.5rem;">¡Logro Desbloqueado!</h2>
+            <h3 style="color: var(--primary); margin-bottom: 1rem;" id="achievementTitle">Primera Clase</h3>
+            <p style="color: var(--muted); margin-bottom: 2rem;" id="achievementDesc">Has generado tu primera clase con
+                IA</p>
+            <button onclick="UI.closeAchievementModal()" class="btn btn-primary">¡Genial!</button>
+        </div>
+    </div>
+
+    <!-- Modal Preview -->
+    <div id="previewModal" class="modal">
+        <div class="modal-content" style="max-width: 700px; padding: 2rem;">
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1.5rem;">
+                <h3 id="previewTitle" style="color:var(--primary);">Detalle de Clase</h3>
+                <button onclick="document.getElementById('previewModal').classList.remove('show')" class="btn-icon"
+                    style="border:none; width:30px; height:30px;"><i class="ph-bold ph-x"></i></button>
+            </div>
+
+            <div id="previewBody"
+                style="background:rgba(0,0,0,0.2); padding:1rem; border-radius:12px; max-height:400px; overflow-y:auto; color:var(--muted); line-height:1.6; white-space: pre-wrap;">
+            </div>
+
+            <div style="margin-top:1.5rem; display:flex; gap:1rem; justify-content:flex-end;">
+                <button id="btnCopyPreview" class="btn btn-outline"><i class="ph ph-copy"></i> Copiar Texto</button>
+                <a id="btnOpenSlides" href="#" target="_blank" class="btn btn-primary"><i
+                        class="ph-bold ph-presentation"></i> Ver Diapositivas</a>
+            </div>
+        </div>
+    </div>
+
+    <div class="app-container">
+        <!-- SIDEBAR -->
+        <aside class="sidebar" id="sidebar">
+            <div class="sidebar-header"><a href="https://educmark.cl" class="logo"><i
+                        class="ph-fill ph-graduation-cap"></i> EducMark</a></div>
+            <nav class="sidebar-nav" style="display: flex; flex-direction: column;">
+                <div class="nav-item active" onclick="Nav.to('overview')" data-target="overview"><i
+                        class="ph ph-squares-four"></i> Dashboard</div>
+                <div class="nav-item" onclick="Nav.to('generator')" data-target="generator"><i
+                        class="ph ph-magic-wand"></i> Generador IA</div>
+                <div class="nav-item" onclick="Nav.to('history')" data-target="history"><i class="ph ph-books"></i> Mis
+                    Clases</div>
+                <div class="nav-item" onclick="Nav.to('profile')" data-target="profile"><i
+                        class="ph ph-user-circle"></i> Mi Perfil</div>
+                <div class="nav-item" onclick="Nav.to('subscription')" data-target="subscription"><i
+                        class="ph ph-credit-card"></i> Suscripción</div>
+
+                <div style="padding: 1rem; border-top: 1px solid var(--border); margin-top: auto;">
+                    <div
+                        style="font-size: 0.75rem; text-transform: uppercase; color: var(--muted); font-weight: 600; margin-bottom: 0.75rem;">
+                        Actividad Reciente
+                    </div>
+                    <div id="socialProofFeed"
+                        style="display: flex; flex-direction: column; gap: 0.5rem; max-height: 200px; overflow-y: auto;">
+                    </div>
+                </div>
+            </nav>
+            <div class="sidebar-footer">
+                <div class="nav-item" onclick="Auth.logout()" style="color: var(--danger);"><i
+                        class="ph ph-sign-out"></i> Cerrar Sesión</div>
+            </div>
+        </aside>
+
+        <main class="main-content">
+            <header class="top-header">
+                <div style="display: flex; align-items: center; gap: 1rem;">
+                    <button class="mobile-toggle" onclick="UI.toggleSidebar()" aria-label="Abrir Menú"><i
+                            class="ph ph-list"></i></button>
+                    <button class="mobile-search-toggle" onclick="UI.toggleMobileSearch()" aria-label="Buscar"><i
+                            class="ph ph-magnifying-glass"></i></button>
+                </div>
+                <div class="header-search" id="headerSearch">
+                    <i class="ph ph-magnifying-glass"></i>
+                    <input type="text" placeholder="Buscar clase..." onkeyup="Data.setFilter('search', this.value)">
+                    <button class="close-search" onclick="UI.toggleMobileSearch()"><i class="ph ph-x"></i></button>
+                </div>
+                <div class="header-actions">
+                    <button class="btn-icon" onclick="UI.toggleTheme()" aria-label="Cambiar Tema"
+                        data-tooltip="Modo Claro/Oscuro">
+                        <i class="ph ph-moon"></i>
+                    </button>
+                    <button class="btn-icon" onclick="UI.showToast('Sin notificaciones', 'info')"
+                        aria-label="Notificaciones" data-tooltip="Notificaciones"><i class="ph ph-bell"></i></button>
+                    <div class="user-profile" onclick="Nav.to('profile')" data-tooltip="Ver Perfil">
+                        <div class="hide-on-mobile" style="margin-right:10px;">
+                            <div style="font-weight:600; font-size:0.9rem;" id="headerName">Cargando...</div>
+                            <div style="font-size:0.75rem; color:var(--muted);" id="headerPlan">...</div>
+                        </div>
+                        <div class="avatar" id="headerAvatar">U</div>
+                    </div>
+                </div>
+            </header>
+
+            <div class="content-wrapper">
+
+                <!-- SECCIÓN DASHBOARD -->
+                <section id="overview" class="section active">
+                    <div class="dashboard-grid">
+                        <div class="card welcome-card">
+                            <div class="welcome-info">
+                                <h1 id="greetingTitle" class="font-heading">Hola 👋</h1>
+                                <p>Bienvenido de nuevo a tu espacio educativo.</p>
+                                <div id="streakBadge"
+                                    style="display: inline-flex; align-items: center; gap: 0.5rem; margin-top: 0.5rem; background: rgba(245, 158, 11, 0.1); padding: 0.4rem 0.8rem; border-radius: 8px; font-size: 0.9rem;">
+                                    <span style="font-size: 1.2rem;">🔥</span>
+                                    <span style="color: var(--warning); font-weight: 600;">
+                                        <span id="streakDays">0</span> días seguidos
+                                    </span>
+                                </div>
+                            </div>
+                            <div class="welcome-actions">
+                                <div class="credits-widget-ring" onclick="Nav.to('subscription')"
+                                    style="cursor: pointer;">
+                                    <svg width="80" height="80" style="transform: rotate(-90deg);">
+                                        <circle cx="40" cy="40" r="32" fill="none" stroke="rgba(245, 158, 11, 0.2)"
+                                            stroke-width="6" />
+                                        <circle id="creditsRing" cx="40" cy="40" r="32" fill="none" stroke="#f59e0b"
+                                            stroke-width="6" stroke-dasharray="201" stroke-dashoffset="0"
+                                            style="transition: stroke-dashoffset 0.5s ease;" />
+                                    </svg>
+                                    <div
+                                        style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); text-align: center;">
+                                        <div style="font-size: 1.5rem; font-weight: 700; color: #f59e0b; line-height: 1;"
+                                            id="creditsCount">--</div>
+                                        <div style="font-size: 0.65rem; color: var(--muted); margin-top: 2px;">créditos
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <button class="btn btn-primary" onclick="Nav.to('generator')"
+                                    style="color: #fff; box-shadow: 0 0 15px rgba(164, 143, 255, 0.4);">
+                                    <i class="ph-bold ph-plus"></i> Nueva Clase
+                                </button>
+                            </div>
+                        </div>
+
+                        <div class="card stat-card purple">
+                            <div class="stat-card-header">
+                                <div class="stat-icon-glass">
+                                    <i class="ph-fill ph-files"></i>
+                                </div>
+                                <span class="trend-badge">+1 esta semana</span>
+                            </div>
+                            <div class="stat-card-body">
+                                <div style="display: flex; justify-content: space-between; align-items: flex-end;">
+                                    <div>
+                                        <div class="stat-number-large skeleton" id="statTotal">0</div>
+                                        <div class="stat-label-left">Clases Creadas</div>
+                                    </div>
+                                    <canvas id="sparklineChart" width="120" height="50"
+                                        style="max-width: 120px; max-height: 50px;"></canvas>
+                                </div>
+                                <div class="progress-container">
+                                    <div class="progress-bar"></div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="card stat-card gold">
+                            <div class="icon-corner-top">
+                                <i class="ph-fill ph-clock"></i>
+                            </div>
+                            <span class="kpi-label-top">TIEMPO AHORRADO</span>
+                            <div class="stat-card-body" style="margin-top: auto;">
+                                <div class="gold-glow-text skeleton" id="statTimeSaved">0h</div>
+                                <div class="humanized-text" id="statBlocksSaved">
+                                    <div style="font-size: 0.8rem; color: var(--muted);">Calculando...</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <h3
+                        style="margin-bottom: 1.5rem; font-family: 'Space Grotesk'; display: flex; justify-content: space-between; align-items: center;">
+                        Actividad Reciente
+                        <button class="btn btn-outline" style="font-size: 0.8rem; padding: 0.4rem 1rem;"
+                            onclick="Nav.to('history')">Ver todo</button>
+                    </h3>
+                    <div class="table-container">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>Clase</th>
+                                    <th>Asignatura</th>
+                                    <th>Curso</th>
+                                    <th>Fecha</th>
+                                    <th style="text-align: right;">Ver</th>
+                                </tr>
+                            </thead>
+                            <tbody id="recentTableBody"></tbody>
+                        </table>
+                    </div>
+                </section>
+
+                <!-- SECCIÓN GENERADOR (WIZARD) -->
+                <section id="generator" class="section">
+                    <div style="margin-bottom: 2rem;">
+                        <h1 style="font-size: 2rem;">Diseña tu Clase</h1>
+                        <p style="color: var(--muted);">Completa los pasos para crear una experiencia de aprendizaje
+                            perfecta.</p>
+                    </div>
+
+                    <div class="wizard-container card"
+                        style="max-width: 900px; margin: 0 auto; padding: 0; border: 1px solid var(--card-border);">
+                        <!-- Wizard Header -->
+                        <div class="wizard-header"
+                            style="padding: 2rem; border-bottom: 1px solid var(--card-border); display: flex; justify-content: space-between; align-items: center;">
+                            <div class="step-indicator active" id="step1-indicator">
+                                <div class="step-circle">1</div>
+                                <span class="step-label">Contexto</span>
+                            </div>
+                            <div class="step-line"></div>
+                            <div class="step-indicator" id="step2-indicator">
+                                <div class="step-circle">2</div>
+                                <span class="step-label">Detalles</span>
+                            </div>
+                            <div class="step-line"></div>
+                            <div class="step-indicator" id="step3-indicator">
+                                <div class="step-circle">3</div>
+                                <span class="step-label">Revisar</span>
+                            </div>
+                        </div>
+
+                        <!-- Wizard Body -->
+                        <div class="wizard-body" style="padding: 2rem;">
+                            <form id="classForm">
+                                <!-- PASO 1: CONTEXTO -->
+                                <div class="wizard-step active" id="step1">
+                                    <div class="form-grid">
+                                        <div class="form-group">
+                                            <label><i class="ph ph-user-circle"></i> Nombre Docente</label>
+                                            <input type="text" class="form-control" id="genName" required>
+                                        </div>
+                                        <div class="form-group">
+                                            <label><i class="ph ph-envelope"></i> Email</label>
+                                            <input type="email" class="form-control" id="genEmail" readonly
+                                                style="opacity:0.6;">
+                                        </div>
+                                    </div>
+                                    <div class="form-grid">
+                                        <div class="form-group">
+                                            <label><i class="ph ph-book-bookmark"></i> Asignatura</label>
+                                            <select class="form-control" id="genSubject" required>
+                                                <option value="">Seleccionar...</option>
+                                                <option>Lenguaje</option>
+                                                <option>Matemáticas</option>
+                                                <option>Historia</option>
+                                                <option>Ciencias</option>
+                                                <option>Inglés</option>
+                                                <option>Tecnología</option>
+                                                <option>Artes</option>
+                                            </select>
+                                        </div>
+                                        <div class="form-group">
+                                            <label><i class="ph ph-student"></i> Curso</label>
+                                            <select class="form-control" id="genGrade" required>
+                                                <option value="">Seleccionar...</option>
+                                                <option>1° Básico</option>
+                                                <option>2° Básico</option>
+                                                <option>3° Básico</option>
+                                                <option>4° Básico</option>
+                                                <option>5° Básico</option>
+                                                <option>6° Básico</option>
+                                                <option>7° Básico</option>
+                                                <option>8° Básico</option>
+                                                <option>I° Medio</option>
+                                                <option>II° Medio</option>
+                                                <option>III° Medio</option>
+                                                <option>IV° Medio</option>
+                                            </select>
+                                        </div>
+                                    </div>
+                                    <div class="form-group">
+                                        <label><i class="ph ph-list-checks"></i> OA (Objetivo de Aprendizaje) <i
+                                                class="ph-fill ph-info info-tooltip"
+                                                title="Copia el OA del currículum"></i></label>
+                                        <input type="text" class="form-control" id="genOA" placeholder="Ej: OA 4..."
+                                            required>
+                                    </div>
+                                    <div class="wizard-footer">
+                                        <button type="button" class="btn btn-primary" onclick="Wizard.next(1)">Siguiente
+                                            <i class="ph-bold ph-arrow-right"></i></button>
+                                    </div>
+                                </div>
+
+                                <!-- PASO 2: DETALLES -->
+                                <div class="wizard-step" id="step2">
+                                    <div class="form-group">
+                                        <label><i class="ph ph-target"></i> Objetivo de la Clase</label>
+                                        <textarea class="form-control" id="genObjClass" rows="4"
+                                            placeholder="¿Qué lograrán los estudiantes hoy?" required></textarea>
+                                    </div>
+                                    <div class="form-grid">
+                                        <div class="form-group">
+                                            <label><i class="ph ph-puzzle-piece"></i> NEE (Inclusión)</label>
+                                            <select class="form-control" id="genNEE">
+                                                <option value="Ninguna">Ninguna</option>
+                                                <option value="TEA">TEA</option>
+                                                <option value="TDAH">TDAH</option>
+                                                <option value="DEA">Dificultad Aprendizaje</option>
+                                            </select>
+                                        </div>
+                                        <div class="form-group">
+                                            <label><i class="ph ph-timer"></i> Duración</label>
+                                            <select class="form-control" id="genDuration">
+                                                <option>90 min</option>
+                                                <option>45 min</option>
+                                            </select>
+                                        </div>
+                                    </div>
+                                    <div class="wizard-footer">
+                                        <button type="button" class="btn btn-outline"
+                                            onclick="Wizard.prev(2)">Atrás</button>
+                                        <button type="button" class="btn btn-primary" onclick="Wizard.next(2)">Siguiente
+                                            <i class="ph-bold ph-arrow-right"></i></button>
+                                    </div>
+                                </div>
+
+                                <!-- PASO 3: REVISIÓN -->
+                                <div class="wizard-step" id="step3">
+                                    <div
+                                        style="background: var(--input-bg); padding: 1.5rem; border-radius: 12px; border: 1px solid var(--border); margin-bottom: 2rem;">
+                                        <h4 style="margin-bottom: 1rem; color: var(--primary);">Resumen de la Clase</h4>
+                                        <div id="summaryContent"
+                                            style="color: var(--muted); font-size: 0.95rem; line-height: 1.6;"></div>
+                                    </div>
+                                    <div class="wizard-footer">
+                                        <button type="button" class="btn btn-outline"
+                                            onclick="Wizard.prev(3)">Atrás</button>
+                                        <button type="submit" class="btn btn-primary btn-submit-wide" id="btnGenerate"
+                                            style="margin: 0; width: auto; padding-left: 2rem; padding-right: 2rem;">
+                                            🪄 Generar Magia
+                                        </button>
+                                    </div>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- SECCIÓN HISTORIAL -->
+                <section id="history" class="section">
+                    <h1 style="font-size: 2rem; margin-bottom: 2rem;">Biblioteca</h1>
+
+                    <div style="display: flex; gap: 1rem; margin-bottom: 1rem; flex-wrap: wrap;">
+                        <select class="form-control" style="width: auto; padding: 0.5rem 1rem;"
+                            onchange="Data.setFilter('subject', this.value)">
+                            <option value="">Todas las asignaturas</option>
+                            <option>Lenguaje</option>
+                            <option>Matemáticas</option>
+                            <option>Historia</option>
+                            <option>Ciencias</option>
+                            <option>Inglés</option>
+                            <option>Tecnología</option>
+                            <option>Artes</option>
+                        </select>
+                        <select class="form-control" style="width: auto; padding: 0.5rem 1rem;"
+                            onchange="Data.setFilter('grade', this.value)">
+                            <option value="">Todos los cursos</option>
+                            <option>1° Básico</option>
+                            <option>2° Básico</option>
+                            <option>3° Básico</option>
+                            <option>4° Básico</option>
+                            <option>5° Básico</option>
+                            <option>6° Básico</option>
+                            <option>7° Básico</option>
+                            <option>8° Básico</option>
+                            <option>I° Medio</option>
+                            <option>II° Medio</option>
+                            <option>III° Medio</option>
+                            <option>IV° Medio</option>
+                        </select>
+                        <button class="btn btn-outline" style="padding: 0.5rem 1rem;" onclick="Data.clearFilters()">
+                            <i class="ph ph-x"></i> Limpiar
+                        </button>
+                        <div class="view-toggle">
+                            <button class="btn btn-outline active" id="viewListBtn" onclick="UI.toggleView('list')"
+                                aria-label="Vista de Lista"><i class="ph ph-list-dashes"></i></button>
+                            <button class="btn btn-outline" id="viewFolderBtn" onclick="UI.toggleView('folders')"
+                                aria-label="Vista de Carpetas"><i class="ph ph-folder"></i></button>
+                        </div>
+                    </div>
+
+                    <div id="folderGrid" class="folder-grid" style="display: none;"></div>
+
+                    <div class="table-container">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>Clase</th>
+                                    <th>Asignatura</th>
+                                    <th>Curso</th>
+                                    <th>Fecha</th>
+                                    <th style="text-align:right;">Ver</th>
+                                </tr>
+                            </thead>
+                            <tbody id="historyTableBody"></tbody>
+                        </table>
+                    </div>
+                </section>
+
+                <!-- SECCIÓN PERFIL -->
+                <section id="profile" class="section">
+                    <h1 style="font-size: 2rem; margin-bottom: 2rem;">Perfil</h1>
+
+                    <div class="form-container">
+                        <div class="form-grid">
+                            <div class="form-group">
+                                <label>Nombre</label>
+                                <input type="text" id="profileNameInput" class="form-control">
+                            </div>
+                            <div class="form-group">
+                                <label>Email</label>
+                                <input type="email" id="profileEmailInput" class="form-control" disabled
+                                    style="opacity: 0.6; cursor: not-allowed;">
+                            </div>
+                        </div>
+                        <button onclick="UI.updateProfile()" class="btn btn-primary">Guardar Cambios</button>
+                    </div>
+
+                    <div class="form-container" style="margin-top: 1.5rem; border-color: rgba(239,68,68,0.3);">
+                        <h4
+                            style="color: var(--danger); margin-bottom: 1rem; display: flex; align-items: center; gap: 8px;">
+                            <i class="ph ph-shield-warning"></i> Seguridad
+                        </h4>
+                        <div class="form-group">
+                            <label>Nueva Contraseña</label>
+                            <input type="password" id="newPassword" class="form-control"
+                                placeholder="Ingresa nueva contraseña (mín. 6 caracteres)">
+                        </div>
+                        <button onclick="UI.updatePassword()" class="btn btn-outline"
+                            style="color: var(--danger); border-color: var(--danger);">
+                            Actualizar Contraseña
+                        </button>
+                    </div>
+                </section>
+
+                <!-- SECCIÓN SUSCRIPCIÓN -->
+                <section id="subscription" class="section">
+                    <h1 style="font-size: 2rem; margin-bottom: 2rem; text-align: center;">Suscripción</h1>
+
+                    <!-- Tarjeta Principal (Plan Actual) -->
+                    <div class="card subscription-card-main">
+                        <div style="font-size: 3rem; color: var(--muted); margin-bottom: 0.5rem;">
+                            <i class="ph-duotone ph-crown"></i>
+                        </div>
+                        <h2 style="font-size: 1.5rem; margin-bottom: 0.5rem;">Plan Actual</h2>
+                        <div style="color: var(--muted); margin-bottom: 1.5rem;">
+                            PLAN ACTUAL: <strong style="color: var(--foreground);" id="subCardPlan">Gratuito</strong>
+                        </div>
+                        <div class="subscription-warning">
+                            <i class="ph-fill ph-warning-circle"></i> Estás perdiendo tiempo valioso. Activa tu
+                            potencia.
+                        </div>
+                    </div>
+
+                    <div style="max-width: 900px; margin: 0 auto;">
+                        <h3
+                            style="margin-bottom: 1.5rem; text-align: center; font-family: 'Space Grotesk', sans-serif;">
+                            ¿Qué plan se ajusta a tu realidad?</h3>
+
+                        <!-- Grid de Comparación (Cargado dinámicamente) -->
+                        <div id="subscriptionComparisonGrid"
+                            style="display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem;">
+                            <div style="text-align:center; padding: 2rem; color: var(--muted); grid-column: 1 / -1;">
+                                <div class="spinner"></div> Cargando ofertas...
+                            </div>
+                        </div>
+                    </div>
+                </section>
+
+            </div>
+        </main>
+    </div>
+
+    <!-- Core Logic -->
+    <script src="dashboard.js"></script>
+</body>
+
+</html>

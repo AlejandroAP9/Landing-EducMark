@@ -1,0 +1,7 @@
+User-agent: *
+Allow: /
+Disallow: /api/
+Disallow: /dashboard/
+Disallow: /auth.html
+
+Sitemap: https://educmark.cl/sitemap.xml

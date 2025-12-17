@@ -1,0 +1,214 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, viewport-fit=cover">
+    <link rel="canonical" href="https://educmark.cl/auth.html">
+    <title>Acceso - EducMark</title>
+    <meta name="description"
+        content="Inicia sesión o regístrate en EducMark. Accede a tu asistente de planificación docente con IA.">
+    <meta name="theme-color" content="#a48fff">
+
+    <!-- PWA Manifest -->
+    <link rel="manifest" href="manifest.json">
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&family=Inter:wght@300;400;500;600;700&display=swap"
+        rel="stylesheet">
+
+    <!-- External Libraries -->
+
+    <script src="https://unpkg.com/@phosphor-icons/web"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+    <link rel="icon" type="image/svg+xml"
+        href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect width='100' height='100' rx='20' fill='%23a48fff'/><path d='M30 50 L50 30 L70 50 L50 70 Z' fill='white'/></svg>">
+
+    <link rel="stylesheet" href="auth.css">
+</head>
+
+<body>
+
+    <div class="background-orbs">
+        <div class="orb orb-1"></div>
+        <div class="orb orb-2"></div>
+    </div>
+
+    <canvas id="neuralCanvas" class="neural-network-bg"></canvas>
+
+    <a href="index.html" class="back-to-home">
+        <i class="ph-bold ph-arrow-left"></i> Inicio
+    </a>
+
+    <div class="auth-container">
+        <div class="auth-header">
+            <h1 class="logo">EducMark</h1>
+            <p class="auth-subtitle">Tu asistente de planificación docente</p>
+        </div>
+
+        <div class="auth-tabs">
+            <button class="tab-button active" onclick="showTab('login')">Ingresar</button>
+            <button class="tab-button" onclick="showTab('register')">Registrarse</button>
+        </div>
+
+        <!-- LOGIN FORM -->
+        <form id="loginForm" class="auth-form active">
+            <div class="form-group">
+                <label for="loginEmail">Correo Electrónico</label>
+                <div class="input-wrapper">
+                    <i class="ph ph-envelope input-icon"></i>
+                    <input type="email" id="loginEmail" class="form-control" placeholder="profe@ejemplo.com" required>
+                </div>
+            </div>
+            <div class="form-group">
+                <label for="loginPassword">Contraseña</label>
+                <div class="input-wrapper">
+                    <i class="ph ph-lock input-icon"></i>
+                    <input type="password" id="loginPassword" class="form-control" placeholder="••••••••" required>
+                    <button type="button" class="password-toggle" onclick="togglePassword('loginPassword', this)">
+                        <i class="ph ph-eye"></i>
+                    </button>
+                </div>
+            </div>
+
+            <!-- Social Login -->
+            <div class="social-login">
+                <div class="divider"><span>O continúa con</span></div>
+                <div class="social-buttons">
+                    <button type="button" class="btn-social" aria-label="Ingresar con Google">
+                        <i class="ph-bold ph-google-logo"></i>
+                    </button>
+                    <button type="button" class="btn-social" aria-label="Ingresar con Microsoft">
+                        <i class="ph-bold ph-windows-logo"></i>
+                    </button>
+                </div>
+            </div>
+
+            <div class="form-options"
+                style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 1rem;">
+                <label
+                    style="display: flex; align-items: center; gap: 8px; font-size: 0.85rem; color: var(--muted-foreground); cursor: pointer;">
+                    <input type="checkbox" style="accent-color: var(--primary);"> Recordarme
+                </label>
+                <a onclick="showForgotPassword()"
+                    style="font-size: 0.85rem; color: var(--primary); cursor: pointer; text-decoration: none;">¿Olvidaste
+                    tu contraseña?</a>
+            </div>
+
+            <button type="submit" class="btn btn-primary" id="loginBtn">Entrar a mi cuenta</button>
+        </form>
+
+        <!-- REGISTER FORM -->
+        <form id="registerForm" class="auth-form">
+            <div class="form-group">
+                <label for="registerName">Nombre Completo</label>
+                <div class="input-wrapper">
+                    <i class="ph ph-user input-icon"></i>
+                    <input type="text" id="registerName" class="form-control" placeholder="Ej. Juan Pérez" required>
+                </div>
+            </div>
+            <div class="form-group">
+                <label for="registerEmail">Correo Electrónico</label>
+                <div class="input-wrapper">
+                    <i class="ph ph-envelope input-icon"></i>
+                    <input type="email" id="registerEmail" class="form-control" placeholder="profe@ejemplo.com"
+                        required>
+                </div>
+            </div>
+            <div class="form-group">
+                <label for="registerPassword">Contraseña</label>
+                <div class="input-wrapper">
+                    <i class="ph ph-lock input-icon"></i>
+                    <input type="password" id="registerPassword" class="form-control" placeholder="Mínimo 6 caracteres"
+                        required minlength="6">
+                    <button type="button" class="password-toggle" onclick="togglePassword('registerPassword', this)">
+                        <i class="ph ph-eye"></i>
+                    </button>
+                </div>
+                <div class="password-requirements">Mínimo 6 caracteres, 1 número, 1 mayúscula</div>
+                <div class="strength-meter">
+                    <div class="strength-bar" id="strengthBar"></div>
+                </div>
+            </div>
+            <div class="form-group">
+                <label for="confirmPassword">Confirmar Contraseña</label>
+                <div class="input-wrapper">
+                    <i class="ph ph-lock-key input-icon"></i>
+                    <input type="password" id="confirmPassword" class="form-control" placeholder="Repite tu contraseña"
+                        required>
+                </div>
+            </div>
+            <button type="submit" class="btn btn-primary" id="registerBtn">Crear Cuenta Gratis</button>
+            <div class="auth-link">
+                <small>Al registrarte aceptas nuestros <a onclick="openTermsModal()">Términos y Condiciones</a></small>
+            </div>
+        </form>
+
+        <!-- FORGOT FORM -->
+        <form id="forgotForm" class="auth-form">
+            <div style="text-align: center; margin-bottom: 1.5rem;">
+                <i class="ph ph-lock-key" style="font-size: 3rem; color: var(--primary);"></i>
+                <h3 style="margin: 10px 0 5px 0;">Recuperar Contraseña</h3>
+                <p style="color: var(--muted-foreground); font-size: 0.9rem;">Te enviaremos un enlace mágico a tu
+                    correo.</p>
+            </div>
+            <div class="form-group">
+                <label for="forgotEmail">Correo Electrónico</label>
+                <input type="email" id="forgotEmail" class="form-control" placeholder="profe@ejemplo.com" required>
+            </div>
+            <button type="submit" class="btn btn-primary" id="forgotBtn">Enviar Enlace</button>
+            <div class="auth-link">
+                <a href="#" onclick="showTab('login')">← Volver al inicio de sesión</a>
+            </div>
+        </form>
+    </div>
+
+    <div id="notification" class="notification">
+        <div class="notification-icon" id="notifIcon"></div>
+        <div id="notificationContent"></div>
+    </div>
+    <div id="termsModal" class="modal" role="dialog" aria-modal="true" aria-hidden="true">
+        <div class="modal-content">
+            <div class="modal-header"><span class="close" onclick="closeTermsModal()" role="button"
+                    aria-label="Cerrar modal">&times;</span>
+                <h2>Términos y Condiciones</h2>
+            </div>
+            <div class="modal-body">
+                <div class="terms-section">
+                    <h3>1. Aceptación del Servicio</h3>
+                    <p>Al registrarse y utilizar EducMark, usted acepta estos términos. EducMark es una herramienta de
+                        asistencia docente basada en IA; el profesor mantiene la responsabilidad final sobre la revisión
+                        y aplicación del material generado.</p>
+                </div>
+                <div class="terms-section">
+                    <h3>2. Propiedad Intelectual</h3>
+                    <p>El material generado (planificaciones, guías) es de su propiedad para uso pedagógico. El
+                        software, código y diseño de EducMark son propiedad exclusiva de la empresa.</p>
+                </div>
+                <div class="terms-section">
+                    <h3>3. Pagos y Suscripciones</h3>
+                    <p>Los pagos son procesados de forma segura por Mercado Pago. Las suscripciones se renuevan
+                        automáticamente salvo cancelación previa.</p>
+                </div>
+                <div class="terms-section">
+                    <h3>4. Política de Garantía y Reembolso</h3>
+                    <p>Ofrecemos una <strong>Garantía de Satisfacción de 7 días</strong>. Si el servicio no cumple sus
+                        expectativas, puede solicitar el reembolso total de su última mensualidad contactando a soporte,
+                        sin preguntas.</p>
+                </div>
+                <div class="terms-section">
+                    <h3>5. Uso Aceptable</h3>
+                    <p>Queda prohibido revender el acceso a la cuenta o utilizar scripts automatizados para extraer
+                        información del sitio.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="auth.js"></script>
+</body>
+
+</html>

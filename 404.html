@@ -1,0 +1,156 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="canonical" href="https://educmark.cl/404.html">
+    <title>Página no encontrada - EducMark</title>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&family=Inter:wght@300;400;500;600;700&display=swap"
+        rel="stylesheet">
+    <link rel="icon" type="image/svg+xml"
+        href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect width='100' height='100' rx='20' fill='%23a48fff'/><path d='M30 50 L50 30 L70 50 L50 70 Z' fill='white'/></svg>">
+    <script src="https://unpkg.com/@phosphor-icons/web"></script>
+    <style>
+        :root {
+            --background: #0f0f1a;
+            --foreground: #e2e2f5;
+            --primary: #a48fff;
+            --font-heading: 'Space Grotesk', sans-serif;
+            --font-body: 'Inter', sans-serif;
+        }
+
+        body {
+            margin: 0;
+            padding: 0;
+            background: var(--background);
+            color: var(--foreground);
+            font-family: var(--font-body);
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+            overflow: hidden;
+            position: relative;
+        }
+
+        canvas {
+            position: absolute;
+            top: 0;
+            left: 0;
+            z-index: 0;
+            opacity: 0.3;
+        }
+
+        .content {
+            z-index: 10;
+            padding: 2rem;
+            max-width: 600px;
+        }
+
+        h1 {
+            font-family: var(--font-heading);
+            font-size: 8rem;
+            margin: 0;
+            line-height: 1;
+            background: linear-gradient(135deg, #a48fff 0%, #7c66ff 100%);
+            -webkit-background-clip: text;
+            background-clip: text;
+            -webkit-text-fill-color: transparent;
+            font-weight: 700;
+        }
+
+        h2 {
+            font-family: var(--font-heading);
+            font-size: 2rem;
+            margin-bottom: 1rem;
+        }
+
+        p {
+            font-size: 1.1rem;
+            color: #a0a0c0;
+            margin-bottom: 2rem;
+        }
+
+        .btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 12px 24px;
+            background: rgba(164, 143, 255, 0.1);
+            border: 1px solid rgba(164, 143, 255, 0.2);
+            color: white;
+            text-decoration: none;
+            border-radius: 50px;
+            font-weight: 600;
+            transition: all 0.3s;
+            backdrop-filter: blur(10px);
+        }
+
+        .btn:hover {
+            background: var(--primary);
+            border-color: var(--primary);
+            box-shadow: 0 0 20px rgba(164, 143, 255, 0.3);
+            transform: translateY(-2px);
+        }
+    </style>
+</head>
+
+<body>
+    <canvas id="neuralCanvas"></canvas>
+
+    <div class="content">
+        <h1>404</h1>
+        <h2>¡Te has perdido en el espacio!</h2>
+        <p>Parece que la página que buscas no existe o ha sido movida a otra dimensión educativa.</p>
+        <a href="index.html" class="btn">
+            <i class="ph-bold ph-house"></i> Volver al Inicio
+        </a>
+    </div>
+
+    <script>
+        // Neutral Network Animation (Simplified)
+        const canvas = document.getElementById('neuralCanvas');
+        const ctx = canvas.getContext('2d');
+        let width, height, nodes = [];
+
+        function resize() {
+            width = canvas.width = window.innerWidth;
+            height = canvas.height = window.innerHeight;
+            createNodes();
+        }
+
+        function createNodes() {
+            nodes = [];
+            const count = Math.floor(width * height / 15000);
+            for (let i = 0; i < count; i++) {
+                nodes.push({
+                    x: Math.random() * width,
+                    y: Math.random() * height,
+                    vx: (Math.random() - 0.5) * 0.5,
+                    vy: (Math.random() - 0.5) * 0.5
+                });
+            }
+        }
+
+        function animate() {
+            ctx.clearRect(0, 0, width, height);
+            ctx.fillStyle = 'rgba(164,143,255,0.5)';
+            nodes.forEach(node => {
+                node.x += node.vx; node.y += node.vy;
+                if (node.x < 0 || node.x > width) node.vx *= -1;
+                if (node.y < 0 || node.y > height) node.vy *= -1;
+                ctx.beginPath(); ctx.arc(node.x, node.y, 2, 0, Math.PI * 2); ctx.fill();
+            });
+            requestAnimationFrame(animate);
+        }
+
+        window.addEventListener('resize', resize);
+        resize(); animate();
+    </script>
+</body>
+
+</html>

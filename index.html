@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>EducMark - Planifica 10 Clases en 1 Hora | IA Educativa Chile</title>
+    
+    <!-- SEO Meta Tags -->
+    <meta name="description" content="Plataforma de IA para profesores chilenos. Genera planificaciones, evaluaciones y material didáctico alineado al currículum MINEDUC en minutos. Recupera tu tiempo libre." />
+    <meta name="keywords" content="IA educativa, profesores Chile, planificaciones MINEDUC, material didáctico, evaluación docente, inteligencia artificial educación, planificación clase a clase, UTP" />
+    <meta name="author" content="EducMark SpA" />
+    <meta name="robots" content="index, follow" />
+    <meta name="theme-color" content="#0f0f1a" />
+    
+    <!-- PWA Manifest -->
+    <link rel="manifest" href="manifest.json">
+    
+    <!-- Open Graph / Facebook -->
+    <meta property="og:type" content="website" />
+    <meta property="og:url" content="https://educmark.cl/" />
+    <meta property="og:title" content="EducMark - Planifica 10 Clases en 1 Hora | IA Educativa Chile" />
+    <meta property="og:description" content="Plataforma de IA para profesores chilenos. Genera planificaciones, evaluaciones y material didáctico alineado al currículum MINEDUC en minutos." />
+    <meta property="og:image" content="https://educmark.cl/og-image.jpg" />
+
+    <!-- Twitter -->
+    <meta property="twitter:card" content="summary_large_image" />
+    <meta property="twitter:url" content="https://educmark.cl/" />
+    <meta property="twitter:title" content="EducMark - IA Educativa Chile" />
+    <meta property="twitter:description" content="Plataforma de IA para profesores chilenos. Genera planificaciones, evaluaciones y material didáctico alineado al currículum MINEDUC en minutos." />
+    <meta property="twitter:image" content="https://educmark.cl/og-image.jpg" />
+    
+    <!-- Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        heading: ['Space Grotesk', 'sans-serif'],
+                        body: ['Inter', 'sans-serif'],
+                    },
+                    colors: {
+                        background: '#0f0f1a',
+                        foreground: '#e2e2f5',
+                        primary: '#a48fff',
+                        'primary-dim': 'rgba(164, 143, 255, 0.1)',
+                        secondary: '#2d2b55',
+                        accent: '#303060',
+                        card: 'rgba(26, 26, 46, 0.6)',
+                        border: '#383052',
+                        destructive: '#ff5478',
+                    },
+                    backgroundImage: {
+                        'gradient-primary': 'linear-gradient(135deg, #a48fff 0%, #8080ff 100%)',
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        body {
+            background-color: #0f0f1a;
+            color: #e2e2f5;
+            scroll-behavior: smooth;
+        }
+        /* Aurora Effects */
+        body::before {
+            content: '';
+            position: fixed;
+            top: -20%;
+            left: -10%;
+            width: 50vw;
+            height: 50vh;
+            background: radial-gradient(circle, rgba(110, 86, 207, 0.25) 0%, rgba(0, 0, 0, 0) 70%);
+            filter: blur(80px);
+            z-index: -1;
+            pointer-events: none;
+        }
+        body::after {
+            content: '';
+            position: fixed;
+            bottom: -20%;
+            right: -10%;
+            width: 60vw;
+            height: 60vh;
+            background: radial-gradient(circle, rgba(16, 185, 129, 0.15) 0%, rgba(0, 0, 0, 0) 70%);
+            filter: blur(100px);
+            z-index: -1;
+            pointer-events: none;
+        }
+    </style>
+<script type="importmap">
+{
+  "imports": {
+    "framer-motion": "https://esm.sh/framer-motion@^12.23.26",
+    "react/": "https://esm.sh/react@^19.2.3/",
+    "react": "https://esm.sh/react@^19.2.3",
+    "lucide-react": "https://esm.sh/lucide-react@^0.561.0",
+    "react-dom/": "https://esm.sh/react-dom@^19.2.3/"
+  }
+}
+</script>
+</head>
+<body>
+    <div id="root"></div>
+</body>
+</html>
